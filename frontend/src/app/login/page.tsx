@@ -1,105 +1,159 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Stethoscope, UserRound, Eye, EyeOff, Shield, Heart } from "lucide-react";
-import { useEffect } from "react";
-import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Stethoscope,
+  UserRound,
+  Eye,
+  EyeOff,
+  Shield,
+  Heart,
+  Activity,
+  Pill,
+  Brain,
+  Thermometer,
+  Plus,
+} from "lucide-react";
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [role, setRole] = useState<"patient" | "doctor">("patient");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+/* ─── floating icon positions (spread across full screen) ─── */
+const floatingIcons = [
+  { Icon: Heart,       size: 28, x: "8%",  y: "20%", delay: 0,   dur: 7   },
+  { Icon: Activity,    size: 22, x: "18%", y: "60%", delay: 1.4, dur: 8   },
+  { Icon: Stethoscope, size: 24, x: "28%", y: "38%", delay: 0.7, dur: 6.5 },
+  { Icon: Pill,        size: 18, x: "14%", y: "80%", delay: 2.1, dur: 7.5 },
+  { Icon: Brain,       size: 26, x: "5%",  y: "50%", delay: 0.3, dur: 9   },
+  { Icon: Thermometer, size: 20, x: "22%", y: "15%", delay: 1.8, dur: 6   },
+  { Icon: Plus,        size: 16, x: "35%", y: "70%", delay: 0.9, dur: 8.5 },
+  { Icon: Heart,       size: 14, x: "40%", y: "25%", delay: 2.5, dur: 7   },
+  { Icon: Activity,    size: 18, x: "10%", y: "90%", delay: 1.1, dur: 6   },
+];
 
-  // Role-aware colors
-  const isPatient = role === "patient";
-  const theme = {
-    gradient: isPatient ? "linear-gradient(135deg, #10B981, #06B6D4)" : "linear-gradient(135deg, #1E3A8A, #2563EB)",
-    primary: isPatient ? "#10B981" : "#2563EB",
-    primaryHover: isPatient ? "#059669" : "#1D4ED8",
-    bgTint: isPatient ? "#F0FDF4" : "#EFF6FF",
-    shadow: isPatient ? "rgba(16, 185, 129, 0.3)" : "rgba(37, 99, 235, 0.3)",
-    orb1: isPatient ? "rgba(16, 185, 129, 0.12)" : "rgba(37, 99, 235, 0.12)",
-    orb2: isPatient ? "rgba(6, 182, 212, 0.10)" : "rgba(99, 102, 241, 0.10)",
-    ringFocus: isPatient ? "rgba(16, 185, 129, 0.3)" : "rgba(37, 99, 235, 0.3)",
-    tabActive: isPatient ? "#065F46" : "#1E3A8A",
-  };
+/* ─── typewriter ─── */
+function useTypewriter(texts: string[], speed = 65, pause = 2400) {
+  const [display, setDisplay] = useState("");
+  const [idx, setIdx]         = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    const handleRedirectResult = async () => {
+    const current = texts[idx];
+    let t: ReturnType<typeof setTimeout>;
+    if (!deleting && charIdx <= current.length) {
+      t = setTimeout(() => { setDisplay(current.slice(0, charIdx)); setCharIdx(c => c + 1); }, speed);
+    } else if (!deleting && charIdx > current.length) {
+      t = setTimeout(() => setDeleting(true), pause);
+    } else if (deleting && charIdx >= 0) {
+      t = setTimeout(() => { setDisplay(current.slice(0, charIdx)); setCharIdx(c => c - 1); }, speed / 2);
+    } else {
+      setDeleting(false);
+      setIdx(i => (i + 1) % texts.length);
+      setCharIdx(0);
+    }
+    return () => clearTimeout(t);
+  }, [charIdx, deleting, idx, texts, speed, pause]);
+
+  return display;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOGIN PAGE
+   ══════════════════════════════════════════════════════════════ */
+export default function LoginPage() {
+  const router = useRouter();
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState("");
+  const [role,         setRole]         = useState<"patient" | "doctor">("patient");
+  const [email,        setEmail]        = useState("");
+  const [password,     setPassword]     = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [mouse,        setMouse]        = useState({ x: 0, y: 0 });
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  const isPatient = role === "patient";
+
+  const typed = useTypewriter([
+    "Smarter Diagnoses",
+    "Personalized Diet Plans",
+    "Instant Appointments",
+    "AI Health Insights",
+  ]);
+
+  /* global parallax */
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!pageRef.current) return;
+    const { width, height } = pageRef.current.getBoundingClientRect();
+    setMouse({
+      x: (e.clientX / width  - 0.5) * 30,
+      y: (e.clientY / height - 0.5) * 30,
+    });
+  };
+
+  /* ── Firebase (logic unchanged) ── */
+  useEffect(() => {
+    (async () => {
       try {
         const result = await getRedirectResult(auth);
-        if (result) {
-          setLoading(true);
-          await processGoogleLoginResult(result);
-        }
-      } catch (err: any) {
-        setError("Sign-in cancelled or failed. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    handleRedirectResult();
+        if (result) { setLoading(true); await processGoogleLoginResult(result); }
+      } catch { setError("Sign-in cancelled or failed. Please try again."); }
+      finally   { setLoading(false); }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const processGoogleLoginResult = async (result: any) => {
     const storedRole = localStorage.getItem("pendingGoogleRole") || role;
-    const payload = {
-      name: result.user.displayName || "Google User",
-      email: result.user.email,
-      password: "google_login_dummy_password", 
-      contactNumber: "0000000000",
-      role: storedRole,
-    };
-
-    // Ensure user exists in backend
     await fetch(`http://localhost:5000/api/auth/${storedRole}/register`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        name: result.user.displayName || "Google User",
+        email: result.user.email,
+        password: "google_login_dummy_password",
+        contactNumber: "0000000000",
+        role: storedRole,
+      }),
     });
-
-    const res = await fetch("http://localhost:5000/api/auth/login", {
+    const res  = await fetch("http://localhost:5000/api/auth/login", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: result.user.email, password: "google_login_dummy_password", role: storedRole })
+      body: JSON.stringify({ email: result.user.email, password: "google_login_dummy_password", role: storedRole }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Google Login failed");
-
-    localStorage.setItem("user", JSON.stringify({ ...data, role: storedRole }));
+    localStorage.setItem("user",      JSON.stringify({ ...data, role: storedRole }));
     if (result.user.email) localStorage.setItem("userEmail", result.user.email);
-    if (data.name) localStorage.setItem("userName", data.name);
+    if (data.name)         localStorage.setItem("userName",  data.name);
     localStorage.setItem("isLoggedIn", "true");
     localStorage.removeItem("pendingGoogleRole");
-
-    if (!data.isProfileCompleted) router.push(`/${storedRole}/setup-profile`);
+    if (!data.isProfileCompleted)      router.push(`/${storedRole}/setup-profile`);
     else if (storedRole === "patient") router.push("/patient/overview");
-    else router.push("/doctor/overview");
+    else                               router.push("/doctor/overview");
   };
 
   const handleGoogleLogin = async () => {
-    setError("");
-    setLoading(true);
+    setError(""); setLoading(true);
     localStorage.setItem("pendingGoogleRole", role);
     const provider = new GoogleAuthProvider();
-    
     try {
       const result = await signInWithPopup(auth, provider);
       await processGoogleLoginResult(result);
       setLoading(false);
     } catch (err: any) {
       if (
-        err.code === "auth/popup-closed-by-user" || 
-        err.code === "auth/popup-blocked" || 
+        err.code === "auth/popup-closed-by-user" ||
+        err.code === "auth/popup-blocked" ||
         err.message?.includes("Cross-Origin-Opener-Policy")
       ) {
-        setError("Popup blocked or closed. Switching to secure redirect...");
+        setError("Popup blocked. Switching to redirect…");
         signInWithRedirect(auth, provider);
       } else {
         setError("Sign-in failed. Please try again.");
@@ -109,35 +163,22 @@ export default function LoginPage() {
   };
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
+    e.preventDefault(); setLoading(true); setError("");
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role })
+      await signInWithEmailAndPassword(auth, email, password);
+      const res  = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, role }),
       });
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || "Login failed");
-
-      // Save user info (includes isProfileCompleted)
-      localStorage.setItem("user", JSON.stringify({ ...data, role }));
-      if (email) localStorage.setItem("userEmail", email);
-      if (data.name) localStorage.setItem("userName", data.name);
+      localStorage.setItem("user",      JSON.stringify({ ...data, role }));
+      if (email)     localStorage.setItem("userEmail", email);
+      if (data.name) localStorage.setItem("userName",  data.name);
       localStorage.setItem("isLoggedIn", "true");
-
-      // 🔑 First-time login → go to profile setup; else go to dashboard
-      if (!data.isProfileCompleted) {
-        router.push(`/${role}/setup-profile`);
-      } else if (role === "patient") {
-        router.push("/patient/overview");
-      } else {
-        router.push("/doctor/overview");
-      }
+      if (!data.isProfileCompleted)  router.push(`/${role}/setup-profile`);
+      else if (role === "patient")   router.push("/patient/overview");
+      else                           router.push("/doctor/overview");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -145,151 +186,272 @@ export default function LoginPage() {
     }
   };
 
+  /* ══════════════════ RENDER ══════════════════ */
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-500" style={{ background: theme.bgTint }}>
-      {/* Background orbs — color shifts with role */}
-      <motion.div
-        key={`orb1-${role}`}
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}
-        className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-3xl pointer-events-none animate-float-slow"
-        style={{ background: `radial-gradient(circle, ${theme.orb1} 0%, transparent 70%)` }}
+    <div
+      ref={pageRef}
+      onMouseMove={handleMouseMove}
+      className="relative min-h-screen w-full overflow-hidden flex items-center justify-center"
+    >
+      {/* ── Full-screen animated gradient background ── */}
+      <div className="absolute inset-0 login-gradient-bg" />
+
+      {/* ── Glow orbs (parallax) ── */}
+      <div
+        className="absolute w-[700px] h-[700px] rounded-full blur-[140px] opacity-25 pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, #10b981 0%, transparent 65%)",
+          top: "-10%", left: "-5%",
+          transform: `translate(${mouse.x * 0.6}px, ${mouse.y * 0.6}px)`,
+          transition: "transform 0.5s ease-out",
+        }}
       />
-      <motion.div
-        key={`orb2-${role}`}
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.15 }}
-        className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-3xl pointer-events-none"
-        style={{ background: `radial-gradient(circle, ${theme.orb2} 0%, transparent 70%)`, animationDelay: "3s", animation: "float-slow 6s ease-in-out infinite reverse" }}
+      <div
+        className="absolute w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, #0ea5e9 0%, transparent 65%)",
+          bottom: "-10%", right: "30%",
+          transform: `translate(${mouse.x * -0.4}px, ${mouse.y * -0.4}px)`,
+          transition: "transform 0.5s ease-out",
+        }}
+      />
+      <div
+        className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-15 pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, #6366f1 0%, transparent 65%)",
+          top: "40%", left: "40%",
+          transform: `translate(${mouse.x * 0.2}px, ${mouse.y * 0.2}px)`,
+          transition: "transform 0.5s ease-out",
+        }}
       />
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="max-w-md w-full glass rounded-3xl shadow-2xl overflow-hidden z-10 p-8"
-        style={{ boxShadow: `0 25px 60px -12px ${theme.shadow}` }}
+      {/* ── SVG waves at bottom ── */}
+      <svg
+        className="absolute bottom-0 left-0 w-full pointer-events-none"
+        viewBox="0 0 1440 220"
+        preserveAspectRatio="none"
+        style={{
+          transform: `translateX(${mouse.x * 0.2}px)`,
+          transition: "transform 0.4s ease-out",
+        }}
       >
-        {/* Logo + branding */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <motion.div
-              key={role}
-              initial={{ scale: 0.8, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 200 }}
-              className="p-3.5 rounded-2xl text-white shadow-xl"
-              style={{ background: theme.gradient, boxShadow: `0 8px 25px ${theme.shadow}` }}
-            >
-              {isPatient ? <Heart size={32} /> : <Stethoscope size={32} />}
-            </motion.div>
+        <path className="login-wave login-wave-1" fill="rgba(16,185,129,0.12)"
+          d="M0,160L60,149C120,139,240,117,360,122C480,128,600,160,720,154C840,149,960,107,1080,101C1200,96,1320,128,1380,144L1440,160L1440,220L0,220Z" />
+        <path className="login-wave login-wave-2" fill="rgba(14,165,233,0.09)"
+          d="M0,192L60,181C120,171,240,149,360,138C480,128,600,128,720,144C840,160,960,192,1080,186C1200,181,1320,139,1380,117L1440,96L1440,220L0,220Z" />
+      </svg>
+
+      {/* ── Floating health icons (left half only) ── */}
+      {floatingIcons.map(({ Icon, size, x, y, delay, dur }, i) => (
+        <motion.div
+          key={i}
+          className="absolute pointer-events-none text-white/[0.07]"
+          style={{ left: x, top: y }}
+          animate={{ y: [0, -20, 0], rotate: [0, 6, -6, 0] }}
+          transition={{ duration: dur, delay, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <Icon size={size} />
+        </motion.div>
+      ))}
+
+      {/* ── TOP-LEFT branding ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.1 }}
+        className="absolute top-8 left-10 z-20 hidden md:block"
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 shadow-lg shadow-emerald-500/30">
+            <Heart size={20} className="text-white" />
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "#0F172A" }}>HealthSphere</h1>
-          <p className="mt-2 font-medium" style={{ color: "#64748B" }}>Your Health, Centralized.</p>
+          <span className="text-white font-bold text-lg tracking-tight">HealthSphere</span>
+        </div>
+        <p className="text-white/40 text-xs pl-1 font-medium tracking-wide">
+          Your Health. Simplified.
+        </p>
+      </motion.div>
+
+      {/* ── LEFT branding block (mid-screen, desktop) ── */}
+      <motion.div
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+        className="absolute left-10 top-1/2 -translate-y-1/2 z-10 hidden lg:block max-w-xs"
+      >
+        <h1 className="text-4xl xl:text-5xl font-extrabold text-white leading-tight mb-3">
+          Your Health.
+          <br />
+          <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+            Simplified.
+          </span>
+        </h1>
+        <p className="text-white/45 text-sm leading-relaxed mb-5">
+          AI-powered healthcare assistant<br />for smarter decisions
+        </p>
+        <div className="flex items-center gap-2 text-white/60 text-sm font-medium">
+          <Activity size={14} className="text-emerald-400 shrink-0" />
+          <span>{typed}</span>
+          <span className="login-cursor">|</span>
         </div>
 
-        {/* Role toggle — visually themed */}
-        <div className="flex p-1.5 rounded-2xl mb-8" style={{ background: "#F1F5F9" }}>
-          {(["patient", "doctor"] as const).map(r => {
-            const isActive = role === r;
-            const RoleIcon = r === "patient" ? UserRound : Stethoscope;
-            return (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRole(r)}
-                className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative"
-                style={isActive ? {
-                  background: "#FFFFFF",
-                  color: theme.tabActive,
-                  boxShadow: `0 2px 8px ${theme.shadow}`,
-                } : {
-                  color: "#94A3B8",
-                }}
-              >
-                <RoleIcon size={16} />
-                {r === "patient" ? "Patient" : "Doctor"}
-              </button>
-            );
-          })}
-        </div>
 
-        {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-5">
-          <div>
-            <label className="block text-sm font-semibold mb-1.5" style={{ color: "#334155" }}>Email Address</label>
-            <input 
-              type="email" 
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-xl border outline-none transition-all font-medium"
-              style={{ borderColor: "#E2E8F0", background: "rgba(255,255,255,0.5)" }}
-              onFocus={e => { e.target.style.borderColor = theme.primary; e.target.style.boxShadow = `0 0 0 3px ${theme.ringFocus}`; e.target.style.background = "#FFFFFF"; }}
-              onBlur={e => { e.target.style.borderColor = "#E2E8F0"; e.target.style.boxShadow = "none"; e.target.style.background = "rgba(255,255,255,0.5)"; }}
-              placeholder="name@example.com"
-            />
-          </div>
-          
-          <div className="relative">
-            <label className="block text-sm font-semibold mb-1.5" style={{ color: "#334155" }}>Password</label>
-            <div className="relative">
-              <input 
-                type={showPassword ? "text" : "password"} 
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3.5 rounded-xl border outline-none transition-all font-medium"
-                style={{ borderColor: "#E2E8F0", background: "rgba(255,255,255,0.5)" }}
-                onFocus={e => { e.target.style.borderColor = theme.primary; e.target.style.boxShadow = `0 0 0 3px ${theme.ringFocus}`; e.target.style.background = "#FFFFFF"; }}
-                onBlur={e => { e.target.style.borderColor = "#E2E8F0"; e.target.style.boxShadow = "none"; e.target.style.background = "rgba(255,255,255,0.5)"; }}
-                placeholder="••••••••"
-              />
-              <button 
-                type="button" 
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: "#94A3B8" }}
-                onMouseEnter={e => e.currentTarget.style.color = theme.primary}
-                onMouseLeave={e => e.currentTarget.style.color = "#94A3B8"}
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+      </motion.div>
+
+      {/* ══════════ FLOATING GLASS LOGIN CARD ══════════ */}
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0,  scale: 1 }}
+        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-20 w-full max-w-[420px] mx-4 lg:mr-16 lg:ml-auto"
+      >
+        <div className="login-glass-card rounded-3xl p-8 lg:p-9">
+
+          {/* Card top: logo + heading */}
+          <div className="mb-7">
+            {/* Mobile logo */}
+            <div className="flex items-center gap-3 mb-5 md:hidden">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 shadow-lg shadow-emerald-500/25">
+                <Heart size={22} className="text-white" />
+              </div>
+              <span className="text-white font-bold text-lg">HealthSphere</span>
             </div>
+
+            <h2 className="text-2xl font-bold text-white mb-1">Welcome back</h2>
+            <p className="text-white/45 text-sm">Sign in to continue to your dashboard</p>
           </div>
 
-          {error && (
-            <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-red-500 text-sm font-medium text-center bg-red-50 rounded-xl py-2 px-3 border border-red-100">
-              {error}
-            </motion.p>
-          )}
+          {/* Role toggle */}
+          <div className="flex p-1 rounded-2xl mb-6 bg-white/10">
+            {(["patient", "doctor"] as const).map((r) => {
+              const active = role === r;
+              const RIcon  = r === "patient" ? UserRound : Stethoscope;
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setRole(r)}
+                  className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300"
+                  style={
+                    active
+                      ? {
+                          background: "rgba(255,255,255,0.15)",
+                          color: "#fff",
+                          boxShadow: `0 2px 12px ${isPatient ? "rgba(16,185,129,0.3)" : "rgba(37,99,235,0.3)"}`,
+                          backdropFilter: "blur(8px)",
+                        }
+                      : { color: "rgba(255,255,255,0.4)" }
+                  }
+                >
+                  <RIcon size={15} />
+                  {r === "patient" ? "Patient" : "Doctor"}
+                </button>
+              );
+            })}
+          </div>
 
-          <motion.button 
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            type="submit"
-            disabled={loading}
-            className="w-full text-white font-semibold py-3.5 rounded-xl transition-all mt-2 disabled:opacity-60"
-            style={{ background: theme.gradient, boxShadow: `0 4px 15px ${theme.shadow}` }}
-          >
-            {loading ? "Signing In..." : `Sign In as ${isPatient ? "Patient" : "Doctor"}`}
-          </motion.button>
-          
-          <button 
-            type="button" 
-            onClick={handleGoogleLogin}
-            className="w-full bg-white hover:bg-slate-50 border font-semibold py-3.5 rounded-xl transition-all mt-2 flex justify-center items-center gap-2 card-hover"
-            style={{ borderColor: "#E2E8F0", color: "#334155" }}
-          >
-            <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-            Sign in with Google
-          </button>
-        </form>
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-semibold text-white/60 mb-1.5 uppercase tracking-wide">
+                Email
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="login-input"
+                placeholder="name@example.com"
+              />
+            </div>
 
-        {/* Footer link */}
-        <div className="flex items-center justify-center gap-2 mt-8">
-          <Shield size={14} style={{ color: "#94A3B8" }}/>
-          <p className="text-sm font-medium" style={{ color: "#64748B" }}>
-            Don't have an account? <Link href="/register" className="font-semibold transition-colors" style={{ color: theme.primary }}>Register here</Link>
-          </p>
+            {/* Password */}
+            <div>
+              <label className="block text-xs font-semibold text-white/60 mb-1.5 uppercase tracking-wide">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="login-input pr-11"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-emerald-400 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Error */}
+            <AnimatePresence>
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="text-red-300 text-sm font-medium text-center bg-red-500/10 rounded-xl py-2 px-3 border border-red-400/20"
+                >
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            {/* Submit */}
+            <motion.button
+              whileHover={{ scale: 1.015, boxShadow: "0 10px 35px rgba(16,185,129,0.45)" }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={loading}
+              className="w-full text-white font-semibold py-3.5 rounded-xl transition-all disabled:opacity-60 login-btn-gradient mt-1"
+            >
+              {loading ? "Signing In…" : `Sign In as ${isPatient ? "Patient" : "Doctor"}`}
+            </motion.button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-xs text-white/30 font-medium">or</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+
+            {/* Google */}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="w-full font-semibold py-3.5 rounded-xl transition-all flex justify-center items-center gap-2.5 login-google-btn"
+            >
+              <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+                <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+                <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+              </svg>
+              Sign in with Google
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="flex items-center justify-center gap-2 mt-7">
+            <Shield size={13} className="text-white/30" />
+            <p className="text-sm text-white/40">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/register"
+                className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+              >
+                Register here
+              </Link>
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>
