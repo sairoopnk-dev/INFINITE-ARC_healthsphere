@@ -3,13 +3,13 @@ import { GoogleGenAI } from '@google/genai';
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 /**
- * Asks Gemini to produce 5–6 short, relevant follow-up questions
- * for the given symptoms. Returns a clean string[] (max 6 items).
+ * Asks Gemini to produce exactly 5 short, relevant follow-up questions
+ * for the given symptoms. Returns a clean string[] (max 5 items).
  */
 export async function generateFollowUpQuestionsAI(symptoms: string): Promise<string[]> {
   const prompt = `You are a medical AI assistant. A patient has reported the following symptoms: "${symptoms}"
 
-Your job is to generate 5 to 6 short, simple, and highly relevant follow-up questions to better understand their condition before giving a final assessment.
+Based on the given symptoms, generate EXACTLY 5 short and relevant follow-up questions. Do NOT generate more than 5 questions.
 
 Rules:
 - Questions must be directly related to the reported symptoms
@@ -21,7 +21,7 @@ Rules:
 - Respond ONLY with a valid JSON array of strings, no markdown, no extra text
 
 Example format:
-["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?", "Question 6?"]`;
+["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]`;
 
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
@@ -33,6 +33,6 @@ Example format:
 
   const parsed: string[] = JSON.parse(cleaned);
 
-  // Enforce max 6 questions
-  return parsed.slice(0, 6);
+  // Enforce max 5 questions
+  return parsed.slice(0, 5);
 }

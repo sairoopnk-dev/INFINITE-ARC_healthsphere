@@ -198,7 +198,9 @@ export default function SymptomCheckerPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to generate questions");
-      setQuestions(data.questions || []);
+      const questionsArray = data.questions || [];
+      const limitedQuestions = questionsArray.slice(0, 5);
+      setQuestions(limitedQuestions);
       setStep("questions");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to generate follow-up questions. Please try again.");
