@@ -6,3 +6,7 @@
 2.Implentation
   - Symptom Checker
   - Diet Plan
+
+3. Login Page
+  -Patient login page
+  -Doctor login page
