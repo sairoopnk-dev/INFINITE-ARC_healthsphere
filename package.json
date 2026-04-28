@@ -1,0 +1,15 @@
+{
+  "name": "healthsphere-root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "cross-env NODE_OPTIONS=\"--no-warnings\" concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "cross-env": "^10.1.0",
+    "firebase": "^12.12.1"
+  }
+}
