@@ -3,7 +3,7 @@
   - Team planning rigourously
   - created all section for features and functionalities
 
-2.Implentation
+2. Implentation
   - Symptom Checker
   - Diet Plan
 
@@ -11,7 +11,7 @@
   - Patient login page
   - Doctor login page
 
-4.Local languages added
+4. Local languages added
   - English
   - Kannada
   - Hindi
@@ -22,3 +22,6 @@
   - Bengali
   - Gujarati
   - Punjabi
+
+5. AI Fallback system 
+  Gemini -> Grok -> Offline
