@@ -9,7 +9,6 @@ import { usePatient } from "../_context/PatientContext";
 import Link from "next/link";
 import AIEvolution from "../_components/AIEvolution";
 import SavedAddresses from "../_components/SavedAddresses";
-import { QuickActions, HealthSummary, UpcomingHighlight } from "../_components/DashboardWidgets";
 
 // ── Medication mini-card type ──────────────────────────────────────────────
 interface ActiveMed {
@@ -54,17 +53,9 @@ export default function PatientOverview() {
 
   return (
     <div className="space-y-8 max-w-[1400px]">
-      <h2 className="text-3xl font-black text-slate-800 mb-8 tracking-tight flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Activity size={28} className="text-teal-500" /> Overview
-        </div>
-        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm">
-          <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
-          <span className="text-xs font-bold text-slate-500">Live Health Sync Active</span>
-        </div>
+      <h2 className="text-3xl font-black text-slate-800 mb-8 tracking-tight flex items-center gap-3">
+        <Activity size={28} className="text-teal-500" /> Overview
       </h2>
-
-      <QuickActions openAppt={openAppt} />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         {/* Profile Card */}
@@ -133,30 +124,18 @@ export default function PatientOverview() {
 
         {/* QR + Appointments */}
         <div className="xl:col-span-7 flex flex-col gap-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link href="/patient/qr" className="bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-3xl p-6 flex items-center gap-6 shadow-lg hover:scale-[1.02] transition-transform cursor-pointer">
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
-                <QrCode size={34} className="text-white" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold">Emergency QR</h4>
-                <p className="text-teal-100 text-xs mt-1">Instant medical ID access for first responders.</p>
-              </div>
-            </Link>
-            
-            {upcomingAppointments.length > 0 && (
-              <UpcomingHighlight appointment={upcomingAppointments[0]} />
-            )}
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-8 flex-1">
-            <div className="md:w-1/3">
-              <HealthSummary 
-                lastSymptoms={timeline[0]?.symptoms || []} 
-                recentActivity={timeline[0]?.title} 
-              />
+          <Link href="/patient/qr" className="bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-3xl p-6 flex items-center gap-6 shadow-lg hover:scale-[1.02] transition-transform cursor-pointer">
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+              <QrCode size={34} className="text-white" />
             </div>
-            <div className="bg-white rounded-3xl p-7 border border-slate-100 shadow-sm flex-1">
+            <div>
+              <h4 className="text-lg font-bold">Emergency QR Code</h4>
+              <p className="text-teal-100 text-sm mt-1">Generate your Medical ID QR for quick first-responder access to your critical health info.</p>
+              <span className="mt-3 inline-block bg-white/20 border border-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-white/30 transition-colors">Generate QR →</span>
+            </div>
+          </Link>
+
+          <div className="bg-white rounded-3xl p-7 border border-slate-100 shadow-sm flex-1">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-slate-800">Appointments</h3>
               <button onClick={openAppt} className="bg-teal-500 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-teal-600 transition-colors">+ Book New</button>
@@ -186,7 +165,6 @@ export default function PatientOverview() {
                 )}
               </tbody>
             </table>
-            </div>
           </div>
         </div>
       </div>
@@ -280,28 +258,6 @@ export default function PatientOverview() {
                 <p className="text-xs font-bold mt-1 opacity-70">{s.label}</p>
               </div>
             ))}
-          </div>
-
-          {/* Small Insights */}
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
-                <Pill size={14} />
-              </div>
-              <p className="text-xs font-bold text-slate-700">
-                You have <span className="text-purple-600">{activeMeds.length}</span> active medicines
-              </p>
-            </div>
-            {activeMeds.length > 0 && (
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                  <Clock size={14} />
-                </div>
-                <p className="text-xs font-bold text-slate-700">
-                  Next reminder in <span className="text-blue-600">3 hrs</span>
-                </p>
-              </div>
-            )}
           </div>
           {/* AI Intelligence link */}
           {userId && userId !== "..." && (

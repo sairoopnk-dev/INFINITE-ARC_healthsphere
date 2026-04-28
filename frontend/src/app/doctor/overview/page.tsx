@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { useDoctor } from "../_context/DoctorContext";
 import ClinicLocation from "../_components/ClinicLocation";
-import { DailySummary, ActivityPanel, QuickStatsDoc } from "../_components/DoctorWidgets";
 
 // ── Severity helpers ──────────────────────────────────────────────────────────
 function severityMeta(score: number | null | undefined) {
@@ -133,26 +132,9 @@ export default function DoctorOverview() {
         <ClinicLocation doctorId={doctor.id} />
       )}
 
-      {/* Main Grid for Appointments and Insights */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        {/* Left Column: Insights */}
-        <div className="xl:col-span-4 space-y-8">
-          <DailySummary 
-            totalToday={todayAppts.length} 
-            priorityCount={todayAppts.filter((a: any) => a.isPriority || priorityIds.has(a.appointmentId)).length} 
-          />
-          
-          <QuickStatsDoc 
-            seenThisWeek={totalApptThisWeek} 
-            upcoming={appointments.filter((a: any) => a.status === "scheduled").length} 
-          />
-
-          <ActivityPanel />
-        </div>
-
-        {/* Right Column: Appointments */}
-        <div className="xl:col-span-8">
-          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+      {/* Today's Appointments */}
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
@@ -284,8 +266,6 @@ export default function DoctorOverview() {
           )}
         </div>
       </div>
-    </div>
-    </div>
 
       {/* ═══════ Patient Summary Modal ═══════ */}
       <AnimatePresence>
