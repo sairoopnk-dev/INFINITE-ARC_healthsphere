@@ -1,6 +1,5 @@
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+import { getAIResponse, AIAllProvidersFailedError } from './aiHandler';
+import { offlineDietPlan } from './offlineFallback';
 
 export interface DietPlanInput {
   height: number;     // cm
@@ -150,14 +149,16 @@ ${useSymptoms && recentSymptoms && recentSymptoms.length > 0
   }
 `.trim();
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-  });
-
-  console.log("Gemini response:", response);
-
-  const plan = (response.text ?? '').trim();
-
-  return { bmi, dailyCalories, plan };
+  try {
+    const text = await getAIResponse(prompt);
+    const plan = text.trim();
+    console.log('[AI] Diet plan generated successfully');
+    return { bmi, dailyCalories, plan };
+  } catch (err) {
+    if (err instanceof AIAllProvidersFailedError) {
+      console.warn('[AI] Offline fallback active for diet plan generator');
+      return offlineDietPlan(input);
+    }
+    throw err;
+  }
 }

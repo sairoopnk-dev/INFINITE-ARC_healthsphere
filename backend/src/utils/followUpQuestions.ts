@@ -1,10 +1,9 @@
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+import { getAIResponse, AIAllProvidersFailedError } from './aiHandler';
+import { offlineFollowUpQuestions } from './offlineFallback';
 
 /**
- * Asks Gemini to produce exactly 5 short, relevant follow-up questions
- * for the given symptoms. Returns a clean string[] (max 5 items).
+ * Generates exactly 5 short, relevant follow-up questions for the given symptoms.
+ * Falls back to keyword-based offline questions if all AI providers fail.
  */
 export async function generateFollowUpQuestionsAI(symptoms: string): Promise<string[]> {
   const prompt = `You are a medical AI assistant. A patient has reported the following symptoms: "${symptoms}"
@@ -23,16 +22,16 @@ Rules:
 Example format:
 ["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]`;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-  });
-
-  const text = (response.text ?? '').trim();
-  const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
-
-  const parsed: string[] = JSON.parse(cleaned);
-
-  // Enforce max 5 questions
-  return parsed.slice(0, 5);
+  try {
+    const text = await getAIResponse(prompt);
+    const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed: string[] = JSON.parse(cleaned);
+    return parsed.slice(0, 5);
+  } catch (err) {
+    if (err instanceof AIAllProvidersFailedError) {
+      console.warn('[AI] Offline fallback active for follow-up questions');
+      return offlineFollowUpQuestions(symptoms);
+    }
+    throw err;
+  }
 }

@@ -1,6 +1,5 @@
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+import { getAIResponse, AIAllProvidersFailedError } from './aiHandler';
+import { offlineSymptomCheck } from './offlineFallback';
 
 export interface SymptomCheckResult {
   severity: number;
@@ -18,7 +17,6 @@ export async function checkSymptomsAI(
     ? `\n\n${patientHistory}\n\nConsider the patient's medical history when analyzing current symptoms.\nIf you detect a pattern of worsening or recurring symptoms, flag this in your explanation.\n`
     : '';
 
-  // Build follow-up answers block if provided
   const answersBlock =
     answers && answers.length > 0
       ? `\n\nThe patient also answered these follow-up questions:\n${answers
@@ -44,22 +42,21 @@ Rules:
 - If patient history is provided, reference relevant past events in your explanation
 - If follow-up answers are provided, factor them into severity and explanation`;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-  });
+  try {
+    const text = await getAIResponse(prompt);
+    const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed: SymptomCheckResult = JSON.parse(cleaned);
 
-  const text = (response.text ?? '').trim();
-
-  // Strip markdown code blocks if present
-  const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
-  const parsed: SymptomCheckResult = JSON.parse(cleaned);
-
-  // Validate severity range
-  parsed.severity = Math.min(10, Math.max(1, Math.round(parsed.severity)));
-  if (parsed.recommendation !== 'home' && parsed.recommendation !== 'consult') {
-    parsed.recommendation = parsed.severity >= 5 ? 'consult' : 'home';
+    parsed.severity = Math.min(10, Math.max(1, Math.round(parsed.severity)));
+    if (parsed.recommendation !== 'home' && parsed.recommendation !== 'consult') {
+      parsed.recommendation = parsed.severity >= 5 ? 'consult' : 'home';
+    }
+    return parsed;
+  } catch (err) {
+    if (err instanceof AIAllProvidersFailedError) {
+      console.warn('[AI] Offline fallback active for symptom checker');
+      return offlineSymptomCheck(symptoms);
+    }
+    throw err;
   }
-
-  return parsed;
 }

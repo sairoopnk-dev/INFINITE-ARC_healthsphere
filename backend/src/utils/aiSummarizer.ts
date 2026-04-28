@@ -1,6 +1,5 @@
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+import { getAIResponse, AIAllProvidersFailedError } from './aiHandler';
+import { offlinePrescriptionSummary, offlineReportSimplify } from './offlineFallback';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    PRESCRIPTION SUMMARIZER
@@ -78,7 +77,7 @@ Rules:
 ───────────────────────────────────────────────────────────────────────────── */
 export interface AISummaryResult {
   type: 'prescription' | 'report';
-  raw: any;           // parsed JSON from Gemini
+  raw: any;           // parsed JSON from AI
   formatted: string;  // human-readable markdown-style string stored in DB
 }
 
@@ -98,60 +97,81 @@ export async function generateAiSummary(
     ? PRESCRIPTION_PROMPT(content) + historyBlock
     : REPORT_PROMPT(content, title) + historyBlock;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-  });
+  try {
+    const text = await getAIResponse(prompt);
+    const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
 
-  const text = (response.text ?? '').trim();
-  // Strip any markdown code fences Gemini might add
-  const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
-  const parsed = JSON.parse(cleaned);
+    let formatted = '';
 
-  // Build a formatted string to store in DB (easy to display on frontend)
-  let formatted = '';
+    if (isPrescription) {
+      formatted += `**Overview:** ${parsed.overview}\n\n`;
+      formatted += `**Medicines Prescribed:**\n`;
+      for (const med of parsed.medicines || []) {
+        formatted += `\n• **${med.name}** (${med.type})\n`;
+        formatted += `  - Dosage: ${med.dosage}\n`;
+        formatted += `  - Frequency: ${med.frequency}\n`;
+        formatted += `  - Duration: ${med.duration}\n`;
+        formatted += `  - Instructions: ${med.instructions}\n`;
+      }
+      if (parsed.generalNotes) {
+        formatted += `\n**General Notes:** ${parsed.generalNotes}\n`;
+      }
+      if (parsed.urgentWarnings) {
+        formatted += `\n⚠️ **Warnings:** ${parsed.urgentWarnings}\n`;
+      }
+    } else {
+      formatted += `**Overview:** ${parsed.overview}\n\n`;
+      formatted += `**Key Findings:**\n`;
+      for (const finding of parsed.keyFindings || []) {
+        const statusEmoji =
+          finding.status === 'Normal' ? '✅' :
+          finding.status === 'Critical' ? '🚨' :
+          finding.status === 'High' || finding.status === 'Low' ? '⚠️' : '📊';
+        formatted += `\n${statusEmoji} **${finding.parameter}**\n`;
+        formatted += `  - Your value: ${finding.yourValue}\n`;
+        formatted += `  - Normal range: ${finding.normalRange}\n`;
+        formatted += `  - Status: **${finding.status}**\n`;
+        formatted += `  - ${finding.explanation}\n`;
+      }
+      if (parsed.concerns) {
+        formatted += `\n⚠️ **Areas of Concern:** ${parsed.concerns}\n`;
+      }
+      if (parsed.recommendation) {
+        formatted += `\n💡 **Recommendation:** ${parsed.recommendation}\n`;
+      }
+    }
 
-  if (isPrescription) {
-    formatted += `**Overview:** ${parsed.overview}\n\n`;
-    formatted += `**Medicines Prescribed:**\n`;
-    for (const med of parsed.medicines || []) {
-      formatted += `\n• **${med.name}** (${med.type})\n`;
-      formatted += `  - Dosage: ${med.dosage}\n`;
-      formatted += `  - Frequency: ${med.frequency}\n`;
-      formatted += `  - Duration: ${med.duration}\n`;
-      formatted += `  - Instructions: ${med.instructions}\n`;
+    return {
+      type: isPrescription ? 'prescription' : 'report',
+      raw: parsed,
+      formatted: formatted.trim(),
+    };
+  } catch (err) {
+    if (err instanceof AIAllProvidersFailedError) {
+      console.warn('[AI] Offline fallback active for AI summarizer');
+
+      if (isPrescription) {
+        const fallback = offlinePrescriptionSummary();
+        return {
+          type: 'prescription',
+          raw: fallback.raw,
+          formatted: fallback.formatted,
+        };
+      } else {
+        const fallback = offlineReportSimplify();
+        const formatted =
+          `**Overview:** ${fallback.summary}\n\n` +
+          `**Key Findings:**\n` +
+          fallback.keyFindings.map((f) => `\n📊 ${f}`).join('') +
+          `\n\n💡 **Recommendation:** ${fallback.actionItems[0] ?? ''}`;
+        return {
+          type: 'report',
+          raw: fallback,
+          formatted: formatted.trim(),
+        };
+      }
     }
-    if (parsed.generalNotes) {
-      formatted += `\n**General Notes:** ${parsed.generalNotes}\n`;
-    }
-    if (parsed.urgentWarnings) {
-      formatted += `\n⚠️ **Warnings:** ${parsed.urgentWarnings}\n`;
-    }
-  } else {
-    formatted += `**Overview:** ${parsed.overview}\n\n`;
-    formatted += `**Key Findings:**\n`;
-    for (const finding of parsed.keyFindings || []) {
-      const statusEmoji =
-        finding.status === 'Normal' ? '✅' :
-        finding.status === 'Critical' ? '🚨' :
-        finding.status === 'High' || finding.status === 'Low' ? '⚠️' : '📊';
-      formatted += `\n${statusEmoji} **${finding.parameter}**\n`;
-      formatted += `  - Your value: ${finding.yourValue}\n`;
-      formatted += `  - Normal range: ${finding.normalRange}\n`;
-      formatted += `  - Status: **${finding.status}**\n`;
-      formatted += `  - ${finding.explanation}\n`;
-    }
-    if (parsed.concerns) {
-      formatted += `\n⚠️ **Areas of Concern:** ${parsed.concerns}\n`;
-    }
-    if (parsed.recommendation) {
-      formatted += `\n💡 **Recommendation:** ${parsed.recommendation}\n`;
-    }
+    throw err;
   }
-
-  return {
-    type: isPrescription ? 'prescription' : 'report',
-    raw: parsed,
-    formatted: formatted.trim(),
-  };
 }
