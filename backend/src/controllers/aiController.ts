@@ -226,8 +226,9 @@ export const generateQuestions = async (req: Request, res: Response): Promise<vo
     }
 
     const questions = await generateFollowUpQuestionsAI(symptoms.trim());
+    const safeQuestions = (questions || []).slice(0, 5);
 
-    res.status(200).json({ success: true, questions });
+    res.status(200).json({ success: true, questions: safeQuestions });
   } catch (error: any) {
     console.error('[AI] generateQuestions error:', error.message);
     res.status(500).json({ success: false, message: 'Failed to generate follow-up questions', error: error.message });
