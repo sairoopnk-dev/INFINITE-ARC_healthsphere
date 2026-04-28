@@ -1,6 +1,5 @@
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+import { getAIResponse, AIAllProvidersFailedError } from './aiHandler';
+import { offlineDoctorMatch } from './offlineFallback';
 
 export interface DoctorMatchResult {
   specialization: string;
@@ -26,19 +25,21 @@ Rules:
 - urgency 'emergency': go to ER immediately
 - specialization should be a real medical specialty`;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-  });
+  try {
+    const text = await getAIResponse(prompt);
+    const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed: DoctorMatchResult = JSON.parse(cleaned);
 
-  const text = (response.text ?? '').trim();
-  const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
-  const parsed: DoctorMatchResult = JSON.parse(cleaned);
-
-  const validUrgencies = ['routine', 'urgent', 'emergency'];
-  if (!validUrgencies.includes(parsed.urgency)) {
-    parsed.urgency = 'routine';
+    const validUrgencies = ['routine', 'urgent', 'emergency'];
+    if (!validUrgencies.includes(parsed.urgency)) {
+      parsed.urgency = 'routine';
+    }
+    return parsed;
+  } catch (err) {
+    if (err instanceof AIAllProvidersFailedError) {
+      console.warn('[AI] Offline fallback active for doctor matcher');
+      return offlineDoctorMatch(symptomsOrCondition);
+    }
+    throw err;
   }
-
-  return parsed;
 }

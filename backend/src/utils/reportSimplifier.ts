@@ -1,6 +1,5 @@
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+import { getAIResponse, AIAllProvidersFailedError } from './aiHandler';
+import { offlineReportSimplify } from './offlineFallback';
 
 export interface ReportSimplificationResult {
   summary: string;
@@ -32,14 +31,16 @@ Rules:
 - actionItems should be practical and clear
 - Include at least 2 entries in glossary for any medical terms found`;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-  });
-
-  const text = (response.text ?? '').trim();
-  const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
-  const parsed: ReportSimplificationResult = JSON.parse(cleaned);
-
-  return parsed;
+  try {
+    const text = await getAIResponse(prompt);
+    const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed: ReportSimplificationResult = JSON.parse(cleaned);
+    return parsed;
+  } catch (err) {
+    if (err instanceof AIAllProvidersFailedError) {
+      console.warn('[AI] Offline fallback active for report simplifier');
+      return offlineReportSimplify();
+    }
+    throw err;
+  }
 }

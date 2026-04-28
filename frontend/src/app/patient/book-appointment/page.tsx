@@ -130,7 +130,9 @@ interface DoctorRecord {
   hospital: string;
 }
 
-export default function BookAppointmentPage() {
+import { Suspense } from "react";
+
+function BookAppointmentContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
@@ -588,5 +590,17 @@ export default function BookAppointmentPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function BookAppointmentPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <BookAppointmentContent />
+    </Suspense>
   );
 }
