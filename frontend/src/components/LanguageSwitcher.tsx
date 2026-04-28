@@ -9,6 +9,13 @@ const LANGUAGES = [
   { code: "en", label: "English" },
   { code: "kn", label: "ಕನ್ನಡ (Kannada)" },
   { code: "hi", label: "हिन्दी (Hindi)" },
+  { code: "ta", label: "தமிழ் (Tamil)" },
+  { code: "te", label: "తెలుగు (Telugu)" },
+  { code: "ml", label: "മലയാളം (Malayalam)" },
+  { code: "mr", label: "मराठी (Marathi)" },
+  { code: "bn", label: "বাংলা (Bengali)" },
+  { code: "gu", label: "ગુજરાતી (Gujarati)" },
+  { code: "pa", label: "ਪੰਜਾਬੀ (Punjabi)" },
 ];
 
 export default function LanguageSwitcher() {
