@@ -8,17 +8,17 @@
   - Diet Plan
 
 3. Login Page
-  -Patient login page
-  -Doctor login page
+  - Patient login page
+  - Doctor login page
 
 4.Local languages added
-  -English
-  -Kannada
-  -Hindi
-  -Tamil
-  -Telugu
-  -Malayalam
-  -Marathi
-  -Bengali
-  -Gujarati
-  -Punjabi
+  - English
+  - Kannada
+  - Hindi
+  - Tamil
+  - Telugu
+  - Malayalam
+  - Marathi
+  - Bengali
+  - Gujarati
+  - Punjabi
