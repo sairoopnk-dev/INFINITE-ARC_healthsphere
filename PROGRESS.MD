@@ -25,3 +25,21 @@
 
 5. AI Fallback system 
   Gemini -> Grok -> Offline
+
+6. Core Features
+  - Symptom Checker
+  - Appointment Booking
+  - Medical Records
+  - Medicine Reminders
+  - Diet Plan & Timeline
+
+7. AI & Voice Intelligence
+  - Gemini (Primary AI)
+  - Grok (Backup)
+  - Offline fallback
+  - Voice assistant (speech-based interaction)
+
+8. Impact & Closing
+  - Faster healthcare access
+  - Reduced delays
+  - Better communication
