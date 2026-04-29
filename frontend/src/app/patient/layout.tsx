@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { PhoneCall } from "lucide-react";
 import { PatientProvider } from "./_context/PatientContext";
 import PatientSidebar from "./_components/PatientSidebar";
 import PatientTopbar from "./_components/PatientTopbar";
@@ -44,6 +45,15 @@ export default function PatientLayout({ children }: { children: ReactNode }) {
           </div>
         </main>
         <PatientModals />
+
+        {/* Floating SOS Button */}
+        <button
+          type="button"
+          className="fixed bottom-8 right-8 z-50 flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold px-5 py-3 rounded-full shadow-lg shadow-red-500/30 border border-red-400/20 hover:scale-105 hover:shadow-[0_10px_25px_rgba(239,68,68,0.5)] active:scale-95 transition-all duration-300"
+        >
+          <PhoneCall size={18} className="animate-pulse" />
+          <span className="tracking-widest">SOS</span>
+        </button>
       </div>
     </PatientProvider>
   );
