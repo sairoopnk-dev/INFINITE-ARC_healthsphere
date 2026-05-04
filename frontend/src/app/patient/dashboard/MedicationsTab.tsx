@@ -390,30 +390,7 @@ export default function MedicationsTab({ profile }: MedicationsTabProps) {
   return (
     <div className="max-w-[1100px] space-y-6">
 
-      {/* ── Hero Banner ── */}
-      <div className="bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 rounded-3xl p-7 flex items-center gap-6 shadow-xl shadow-purple-500/20 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
-        <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
-          <Pill size={32} className="text-white" />
-        </div>
-        <div className="flex-1 relative z-10">
-          <h2 className="text-2xl font-black text-white">My Medications</h2>
-          <p className="text-purple-100 text-sm mt-1">
-            Set reminders per medicine. Tap the 🔔 icon on any active card to schedule daily alerts.
-          </p>
-        </div>
-        <div className="flex gap-3 shrink-0">
-          <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-5 py-3 text-center border border-white/20">
-            <p className="text-white text-2xl font-black">{activeMeds.length}</p>
-            <p className="text-purple-100 text-[10px] font-bold uppercase tracking-wider">Active</p>
-          </div>
-          <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-5 py-3 text-center border border-white/20">
-            <p className="text-white text-2xl font-black">{pastMeds.length}</p>
-            <p className="text-purple-100 text-[10px] font-bold uppercase tracking-wider">Completed</p>
-          </div>
-        </div>
-      </div>
+
 
       {/* ── Error ── */}
       {error && (

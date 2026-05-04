@@ -36,46 +36,69 @@ export default function PatientSidebar() {
 
       {/* ── Navigation ──────────────────────────────────────────── */}
       <nav className="flex-1 px-4 py-5 space-y-1 overflow-y-auto custom-scrollbar">
-        {NAV.map(item => {
-          const isActive = pathname === item.href;
-          const isMessageItem = item.name === "Messages";
-          const badgeCount = isMessageItem ? unreadCount : 0;
-          return (
-            <Link key={item.name} href={item.href}
-              className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 font-semibold text-left group relative ${
-                isActive
-                  ? "text-white shadow-md"
-                  : "text-slate-500 hover:bg-emerald-50/60 hover:text-slate-700"
-              }`}
-              style={isActive ? {
-                background: "linear-gradient(135deg, #10B981, #06B6D4)",
-                boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)",
-              } : {}}
-            >
-              <div className="relative">
-                <item.icon size={19} className={isActive ? "text-white" : "text-slate-400 group-hover:text-emerald-500"} />
-                {badgeCount > 0 && <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-orange-500 border-2 border-white rounded-full text-[8px] font-black flex items-center justify-center text-white">{badgeCount}</span>}
-              </div>
-              <span className="flex-1 text-sm">{item.name}</span>
-              {isActive && <div className="w-1.5 h-1.5 rounded-full bg-white/70"/>}
-            </Link>
-          );
-        })}
+        {(() => {
+          const checkIsActive = (route: string) => {
+            if (route === "/patient/symptom-checker") {
+              return pathname.includes("symptom-checker");
+            }
+            return pathname === route;
+          };
 
-        {/* Symptom checker CTA */}
-        <div className="pt-3 mt-3 border-t" style={{ borderColor: "#F0FDF4" }}>
-          <Link href="/patient/symptom-checker"
-            className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-left transition-all duration-200 text-white group animate-gradient-shift"
-            style={{
-              background: "linear-gradient(135deg, #10B981, #06B6D4, #10B981)",
-              backgroundSize: "200% 200%",
-              boxShadow: "0 4px 15px rgba(16, 185, 129, 0.25)",
-            }}
-          >
-            <Stethoscope size={19} className="group-hover:rotate-12 transition-transform"/>
-            <span className="flex-1 text-sm">Check Symptoms</span>
-          </Link>
-        </div>
+          return (
+            <>
+              {NAV.map(item => {
+                const isActive = checkIsActive(item.href);
+                const isMessageItem = item.name === "Messages";
+                const badgeCount = isMessageItem ? unreadCount : 0;
+                return (
+                  <Link key={item.name} href={item.href}
+                    className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 font-semibold text-left group relative ${
+                      isActive
+                        ? "text-white shadow-md"
+                        : "text-slate-500 hover:bg-emerald-50/60 hover:text-slate-700"
+                    }`}
+                    style={isActive ? {
+                      background: "linear-gradient(135deg, #10B981, #06B6D4)",
+                      boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)",
+                    } : {}}
+                  >
+                    <div className="relative">
+                      <item.icon size={19} className={isActive ? "text-white" : "text-slate-400 group-hover:text-emerald-500"} />
+                      {badgeCount > 0 && <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-orange-500 border-2 border-white rounded-full text-[8px] font-black flex items-center justify-center text-white">{badgeCount}</span>}
+                    </div>
+                    <span className="flex-1 text-sm">{item.name}</span>
+                    {isActive && <div className="w-1.5 h-1.5 rounded-full bg-white/70"/>}
+                  </Link>
+                );
+              })}
+
+              {/* Symptom checker CTA */}
+              <div className="pt-3 mt-3 border-t" style={{ borderColor: "#F0FDF4" }}>
+                {(() => {
+                  const isActive = checkIsActive("/patient/symptom-checker");
+                  return (
+                    <Link href="/patient/symptom-checker"
+                      className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-left transition-all duration-200 group ${
+                        isActive
+                          ? "text-white animate-gradient-shift shadow-md"
+                          : "text-slate-500 hover:bg-emerald-50/60 hover:text-slate-700"
+                      }`}
+                      style={isActive ? {
+                        background: "linear-gradient(135deg, #10B981, #06B6D4, #10B981)",
+                        backgroundSize: "200% 200%",
+                        boxShadow: "0 4px 15px rgba(16, 185, 129, 0.25)",
+                      } : {}}
+                    >
+                      <Stethoscope size={19} className={isActive ? "text-white transition-transform" : "text-slate-400 group-hover:text-emerald-500 group-hover:rotate-12 transition-transform"}/>
+                      <span className="flex-1 text-sm">Check Symptoms</span>
+                      {isActive && <div className="w-1.5 h-1.5 rounded-full bg-white/70"/>}
+                    </Link>
+                  );
+                })()}
+              </div>
+            </>
+          );
+        })()}
       </nav>
 
       {/* ── User card + actions ─────────────────────────────────── */}

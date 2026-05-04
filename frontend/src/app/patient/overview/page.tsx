@@ -53,9 +53,7 @@ export default function PatientOverview() {
 
   return (
     <div className="space-y-8 max-w-[1400px]">
-      <h2 className="text-3xl font-black text-slate-800 mb-8 tracking-tight flex items-center gap-3">
-        <Activity size={28} className="text-teal-500" /> Overview
-      </h2>
+
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         {/* Profile Card */}

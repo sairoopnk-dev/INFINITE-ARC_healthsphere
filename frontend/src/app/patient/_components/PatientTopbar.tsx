@@ -1,21 +1,23 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Calendar as CalendarIcon, FileText, Pill, Activity, Mail, LayoutDashboard, Salad, Brain } from "lucide-react";
+import { Calendar as CalendarIcon, FileText, Pill, Activity, Mail, LayoutDashboard, Salad, Brain, Stethoscope } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePatient } from "../_context/PatientContext";
 import LanguageSwitcher from "../../../components/LanguageSwitcher";
 import Portal from "../../../components/Portal";
 
-const PAGE_TITLES: Record<string, { label: string; icon: any }> = {
-  "/patient/overview":        { label: "Overview",        icon: LayoutDashboard },
-  "/patient/appointments":    { label: "Appointments",    icon: CalendarIcon },
-  "/patient/medical-records": { label: "Medical Records", icon: FileText },
-  "/patient/medications":     { label: "Medications",     icon: Pill },
-  "/patient/timeline":        { label: "Timeline",        icon: Activity },
-  "/patient/diet-plan":       { label: "Diet Plan",       icon: Salad },
-  "/patient/health-report":   { label: "Health Report",   icon: Brain },
-  "/patient/messages":        { label: "Messages",        icon: Mail },
+const getPageInfo = (path: string) => {
+  if (path.includes("overview")) return { label: "Overview", icon: LayoutDashboard };
+  if (path.includes("appointments")) return { label: "Appointments", icon: CalendarIcon };
+  if (path.includes("medical-records")) return { label: "Medical Records", icon: FileText };
+  if (path.includes("medications")) return { label: "Medications", icon: Pill };
+  if (path.includes("timeline")) return { label: "Timeline", icon: Activity };
+  if (path.includes("diet-plan")) return { label: "Diet Plan", icon: Salad };
+  if (path.includes("health-report")) return { label: "Health Report", icon: Brain };
+  if (path.includes("messages")) return { label: "Messages", icon: Mail };
+  if (path.includes("symptom-checker")) return { label: "Symptom Checker", icon: Stethoscope };
+  return { label: "Dashboard", icon: LayoutDashboard };
 };
 
 /** Format current date as DD-MM-YYYY */
@@ -43,7 +45,7 @@ export default function PatientTopbar() {
     scheduled,
   } = usePatient();
 
-  const page = PAGE_TITLES[pathname] || { label: "Dashboard", icon: LayoutDashboard };
+  const page = getPageInfo(pathname);
   const PageIcon = page.icon;
 
   return (

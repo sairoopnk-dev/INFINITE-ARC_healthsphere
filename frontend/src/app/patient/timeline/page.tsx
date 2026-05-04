@@ -286,22 +286,7 @@ export default function PatientTimeline() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* ── Header ── */}
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-7 flex items-center gap-5 shadow-xl">
-        <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
-          <Activity size={28} className="text-white" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-black text-white">Medical Timeline</h2>
-          <p className="text-slate-400 text-sm mt-1">
-            A chronological record of diagnoses, prescriptions, lab reports, and uploaded records.
-          </p>
-        </div>
-        <div className="ml-auto text-right shrink-0">
-          <p className="text-3xl font-black text-white">{entries.length}</p>
-          <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Total Entries</p>
-        </div>
-      </div>
+
 
       {/* ── Filter Chips ── */}
       <div className="flex flex-wrap gap-2">

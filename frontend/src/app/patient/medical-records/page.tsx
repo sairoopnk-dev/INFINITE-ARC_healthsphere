@@ -550,9 +550,7 @@ export default function PatientMedicalRecords() {
     <div className="space-y-4 max-w-[1400px]">
       {/* ── Page header ── */}
       <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
-        <h2 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-          <FileText size={28} className="text-teal-500" /> Medical Records
-        </h2>
+
         <div className="flex items-center gap-2 flex-wrap">
           {/* Select mode toggle */}
           {!selectMode ? (
@@ -609,22 +607,7 @@ export default function PatientMedicalRecords() {
         )}
       </AnimatePresence>
 
-      {/* ── AI Summarizer Banner ── */}
-      <div className="bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl p-4 flex items-center gap-4 shadow-lg shadow-purple-500/20">
-        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-          <Sparkles size={20} className="text-white" />
-        </div>
-        <div className="flex-1">
-          <p className="text-white font-bold text-sm">AI Medical Summarizer</p>
-          <p className="text-purple-100 text-xs">
-            Click "Summarize" on any record for a patient-friendly explanation — generated once and saved permanently.
-          </p>
-        </div>
-        <div className="shrink-0 bg-white/20 rounded-xl px-4 py-2 text-center border border-white/20">
-          <p className="text-white text-lg font-black">{totalRecords}</p>
-          <p className="text-purple-100 text-[10px] font-bold uppercase tracking-wider">Total</p>
-        </div>
-      </div>
+
 
       {summaryError && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-3 flex items-center gap-3">

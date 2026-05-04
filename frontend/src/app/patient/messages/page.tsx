@@ -8,9 +8,7 @@ export default function PatientMessages() {
 
   return (
     <div className="max-w-[1000px] mx-auto space-y-4">
-      <h2 className="text-3xl font-black text-slate-800 mb-8 tracking-tight flex items-center gap-3">
-        <Mail size={28} className="text-teal-500" /> Messages
-      </h2>
+
 
       <div className="flex items-center justify-between bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
         <div>

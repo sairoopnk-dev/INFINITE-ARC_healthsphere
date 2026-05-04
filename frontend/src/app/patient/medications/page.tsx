@@ -9,9 +9,7 @@ export default function PatientMedications() {
 
   return (
     <div>
-      <h2 className="text-3xl font-black text-slate-800 mb-8 tracking-tight flex items-center gap-3">
-        <Pill size={28} className="text-teal-500" /> Medications
-      </h2>
+
       <MedicationsTab profile={profile} />
     </div>
   );

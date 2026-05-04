@@ -271,32 +271,6 @@ export default function PatientAppointments() {
   return (
     <div className="max-w-[1400px] space-y-8">
 
-      {/* ── Hero Banner ── */}
-      <div className="bg-gradient-to-br from-teal-500 via-emerald-500 to-cyan-600 rounded-3xl p-7 flex items-center gap-6 shadow-xl shadow-teal-500/20 relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "radial-gradient(circle at 80% 50%, white 1px, transparent 1px)", backgroundSize: "32px 32px" }}
-        />
-        <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
-          <CalendarIcon size={32} className="text-white" />
-        </div>
-        <div className="flex-1 relative z-10">
-          <h2 className="text-2xl font-black text-white">My Appointments</h2>
-          <p className="text-teal-100 text-sm mt-1">
-            Track your upcoming visits and review your appointment history.
-          </p>
-        </div>
-        <div className="flex gap-4 shrink-0">
-          <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-5 py-3 text-center border border-white/20">
-            <p className="text-white text-2xl font-black">{upcomingAppointments.length}</p>
-            <p className="text-teal-100 text-[10px] font-bold uppercase tracking-wider">Upcoming</p>
-          </div>
-          <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-5 py-3 text-center border border-white/20">
-            <p className="text-white text-2xl font-black">{pastAppointments.length}</p>
-            <p className="text-teal-100 text-[10px] font-bold uppercase tracking-wider">Past</p>
-          </div>
-        </div>
-      </div>
 
       {/* ── Tabs + Book Button ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">

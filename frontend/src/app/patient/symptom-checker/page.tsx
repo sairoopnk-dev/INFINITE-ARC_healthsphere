@@ -43,7 +43,7 @@ function StepIndicator({ current }: { current: Step }) {
   const idx = steps.findIndex(s => s.key === current);
 
   return (
-    <div className="flex items-center gap-2 mb-6">
+    <div className="flex items-center justify-center gap-2 mb-6">
       {steps.map((s, i) => (
         <div key={s.key} className="flex items-center gap-2">
           <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
@@ -260,11 +260,8 @@ export default function SymptomCheckerPage() {
     <div className="max-w-2xl mx-auto space-y-6">
 
       {/* Page header */}
-      <div className="mb-2 flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Symptom Checker</h1>
-          <p className="text-sm text-slate-500 mt-0.5">AI-powered symptom analysis</p>
-        </div>
+      <div className="mb-2 flex items-center justify-center flex-wrap gap-3">
+
         <div className="flex items-center gap-3">
           {userId && <AIEvolution userId={userId} compact />}
           {memoryActive && (
