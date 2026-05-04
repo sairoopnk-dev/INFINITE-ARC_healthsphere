@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, FileText, Pill, Activity, Mail, LayoutDashboa
 import { motion, AnimatePresence } from "framer-motion";
 import { usePatient } from "../_context/PatientContext";
 import LanguageSwitcher from "../../../components/LanguageSwitcher";
+import Portal from "../../../components/Portal";
 
 const PAGE_TITLES: Record<string, { label: string; icon: any }> = {
   "/patient/overview":        { label: "Overview",        icon: LayoutDashboard },
@@ -47,7 +48,7 @@ export default function PatientTopbar() {
 
   return (
     <header
-      className="px-8 py-4 flex items-center justify-between shrink-0 border-b"
+      className="px-8 py-4 flex items-center justify-between shrink-0 border-b z-10 relative"
       style={{
         background: "rgba(255, 255, 255, 0.85)",
         backdropFilter: "blur(12px)",
@@ -112,49 +113,51 @@ export default function PatientTopbar() {
           </button>
           <AnimatePresence>
             {showMessages && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 mt-3 w-80 glass rounded-3xl shadow-2xl p-4 z-50"
-                style={{ border: "1px solid rgba(209, 250, 229, 0.5)" }}
-              >
-                <div className="flex items-center justify-between mb-4 px-2">
-                  <h4 className="font-bold" style={{ color: "#064E3B" }}>Messages & Notifications</h4>
-                  <button onClick={() => markAllRead()} className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#10B981" }}>Mark All Read</button>
-                </div>
-                <div className="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
-                  {messages.map((m: any) => (
-                    <div
-                      key={m.id}
-                      onClick={() => markOneRead(m)}
-                      className="p-3 rounded-2xl border transition-all cursor-pointer card-hover"
-                      style={m.isNew
-                        ? { background: "#F0FDF4", borderColor: "#D1FAE5" }
-                        : { background: "#F8FAFC", borderColor: "#E5E7EB", opacity: 0.75 }
-                      }
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                          style={m.type === "appointment"
-                            ? { background: "#D1FAE5", color: "#059669" }
-                            : { background: "#EDE9FE", color: "#7C3AED" }
-                          }
-                        >
-                          {m.type === "appointment" ? <CalendarIcon size={14} /> : <Pill size={14} />}
+              <Portal>
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="fixed top-[76px] right-24 w-80 glass rounded-3xl shadow-2xl p-4 z-[9999]"
+                  style={{ border: "1px solid rgba(209, 250, 229, 0.5)" }}
+                >
+                  <div className="flex items-center justify-between mb-4 px-2">
+                    <h4 className="font-bold" style={{ color: "#064E3B" }}>Messages & Notifications</h4>
+                    <button onClick={() => markAllRead()} className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#10B981" }}>Mark All Read</button>
+                  </div>
+                  <div className="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                    {messages.map((m: any) => (
+                      <div
+                        key={m.id}
+                        onClick={() => markOneRead(m)}
+                        className="p-3 rounded-2xl border transition-all cursor-pointer card-hover"
+                        style={m.isNew
+                          ? { background: "#F0FDF4", borderColor: "#D1FAE5" }
+                          : { background: "#F8FAFC", borderColor: "#E5E7EB", opacity: 0.75 }
+                        }
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                            style={m.type === "appointment"
+                              ? { background: "#D1FAE5", color: "#059669" }
+                              : { background: "#EDE9FE", color: "#7C3AED" }
+                            }
+                          >
+                            {m.type === "appointment" ? <CalendarIcon size={14} /> : <Pill size={14} />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold leading-normal" style={{ color: "#0F172A" }}>{m.text}</p>
+                            <span className="text-[10px] font-medium mt-1 inline-block" style={{ color: "#94A3B8" }}>{formatDate(m.date)}</span>
+                          </div>
+                          {m.isNew && <div className="w-2 h-2 rounded-full mt-1" style={{ background: "#F97316" }} />}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold leading-normal" style={{ color: "#0F172A" }}>{m.text}</p>
-                          <span className="text-[10px] font-medium mt-1 inline-block" style={{ color: "#94A3B8" }}>{formatDate(m.date)}</span>
-                        </div>
-                        {m.isNew && <div className="w-2 h-2 rounded-full mt-1" style={{ background: "#F97316" }} />}
                       </div>
-                    </div>
-                  ))}
-                  {messages.length === 0 && (
-                    <p className="text-center text-xs py-6 font-medium" style={{ color: "#94A3B8" }}>No new notifications</p>
-                  )}
-                </div>
-              </motion.div>
+                    ))}
+                    {messages.length === 0 && (
+                      <p className="text-center text-xs py-6 font-medium" style={{ color: "#94A3B8" }}>No new notifications</p>
+                    )}
+                  </div>
+                </motion.div>
+              </Portal>
             )}
           </AnimatePresence>
         </div>

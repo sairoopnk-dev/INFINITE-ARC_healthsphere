@@ -31,6 +31,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <LanguageProvider>
+          <div id="portal-root"></div>
           {children}
           
           {/* Hidden Google Translate Element */}

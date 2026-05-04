@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Portal from "./Portal";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -36,31 +37,33 @@ export default function LanguageSwitcher() {
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden"
-          >
-            <div className="py-2">
-              {LANGUAGES.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => {
-                    setLanguage(lang.code);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
-                    language === lang.code
-                      ? "bg-teal-50 text-teal-700"
-                      : "text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  {lang.label}
-                </button>
-              ))}
-            </div>
-          </motion.div>
+          <Portal>
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="fixed top-[76px] right-44 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl z-[9999] overflow-hidden"
+            >
+              <div className="py-2">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
+                      language === lang.code
+                        ? "bg-teal-50 text-teal-700"
+                        : "text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </Portal>
         )}
       </AnimatePresence>
     </div>
