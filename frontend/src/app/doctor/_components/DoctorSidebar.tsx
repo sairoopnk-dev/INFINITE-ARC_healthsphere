@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Stethoscope, Calendar, Search, BarChart2, LogOut, Award, BriefcaseMedical, Mail, AlertTriangle } from "lucide-react";
+import { Stethoscope, Calendar, Search, BarChart2, LogOut, Award, BriefcaseMedical, Mail, AlertTriangle, Lock } from "lucide-react";
 import { useDoctor } from "../_context/DoctorContext";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
